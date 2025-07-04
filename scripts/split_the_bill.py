@@ -1,15 +1,16 @@
 import algorithms
 import algorithms.max_centered
 
-DATA = {'p1': {'accounts': [1.0, 2.0, 3.0], 'weight': 1.0}, 'p2': {'accounts': [0.1, 117.0], 'weight': 2.0}, 'p3': {'accounts': [0.0], 'weight': 1.0}}
-DEFAULT_ALGO = algorithms.max_centered.MaxCentered()
+DATA = {'p1': {'accounts': [0.01], 'weight': 1.0}, 'p2': {'accounts': [0.01], 'weight': 2.0}, 'p3': {'accounts': [0.0], 'weight': 1.0}}
 
 class Spliter:
     def __init__(self,data = {}):
+        DEFAULT_ALGO = algorithms.max_centered.MaxCentered()
         self.people:dict = data
         self.total = 0
         self.average_cost = 0
         self.algo = DEFAULT_ALGO
+        self.payments = {}
 
     def add_person(self):
         name = get_input('\n请输入姓名：')
@@ -33,12 +34,24 @@ class Spliter:
         total_weight = sum([p['weight'] for p in self.people.values()])
         for person in self.people.values():
             weight = person['weight'] / total_weight
-            payable_amount = self.average_cost * weight
+            payable_amount = self.total * weight
             balance = payable_amount - sum(person['accounts'])
+            payable_amount,balance = round(payable_amount,2),round(balance,2)
             person['payable_amount'] = payable_amount
             person['balance'] = balance
-            result = self.algo.run(self.people)
-        return self.total,self.average_cost
+        self.payments = self.algo.run(self.people)
+
+class Payment:
+    def __init__(self,from_who:str,to_who:str,amount:float):
+        if amount == 0:
+            return None
+        if amount < 0:
+            amount = abs(amount)
+            from_who,to_who = to_who,from_who
+        self.from_who,self.to_who,self.amount = from_who,to_who,amount
+    
+    def __str__(self):
+        return '{}向{}转账{}元'.format(self.from_who,self.to_who,self.amount)
 
 def is_number(string):
     try:
@@ -56,5 +69,7 @@ def set_output(message):
 
 if __name__ == "__main__":
     spliter = Spliter(DATA)
-    set_output(spliter.calculate())
-    set_output(spliter.people)
+    spliter.calculate()
+    print(sum([p['payable_amount'] for p in spliter.people.values()]),spliter.total)
+    for payment in spliter.payments:
+        set_output(payment)
